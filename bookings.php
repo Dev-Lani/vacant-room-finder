@@ -23,7 +23,7 @@ foreach($rows as $b){
   } elseif ($s === 'checked-in') {
     $act .= '<button type="button" class="btn sm" data-checkout data-id="'.$b['id'].'" data-name="'.h($b['lendee_name']).'">Check out</button>';
   } else $act = '—';
-  echo '<tr><td><b>'.h($b['room']).'</b></td><td>'.date('D, M j',strtotime($b['booking_date'])).'</td><td>'.t12($b['start_time']).' – '.t12($b['end_time']).'</td><td>'.h($b['class_name']).'</td><td><b>'.h($b['lendee_name']).'</b><br><small>'.h($b['lendee_id']).'</small></td><td>'.h($b['key_lent_by']).'</td><td>'.$log.'</td><td>'.status_badge($b,$now).'</td><td class="acts2">'.$act.'</td></tr>';
+  echo '<tr><td><b>'.h($b['room']).'</b></td><td>'.date('D, M j',strtotime($b['booking_date'])).'</td><td>'.t12($b['start_time']).' – '.t12($b['end_time']).'</td><td>'.h($b['class_name']).'</td><td><b>'.h($b['lendee_name']).'</b><br><small>'.h($b['lendee_id']).'</small></td><td>'.h($b['key_lent_by'] ?: '—').'</td><td>'.$log.'</td><td>'.status_badge($b,$now).'</td><td class="acts2">'.$act.'</td></tr>';
 }
 echo '</tbody></table></div><button class="btn fab" data-book>+ New booking</button>';
 booking_modal($rooms); checkout_modal(); page_foot();

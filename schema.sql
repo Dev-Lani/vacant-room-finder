@@ -16,9 +16,19 @@ CREATE TABLE bookings (
   lendee_name VARCHAR(80) NOT NULL,
   lendee_id VARCHAR(20) NOT NULL,
   key_lent_by VARCHAR(60) NOT NULL,
+  status ENUM('booked','checked-in','completed','cancelled') NOT NULL DEFAULT 'booked',
+  checked_in_at DATETIME NULL,
+  checked_out_at DATETIME NULL,
+  key_returned_by VARCHAR(60) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
   INDEX (room_id, booking_date)
+);
+CREATE TABLE IF NOT EXISTS admins (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(40) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  display_name VARCHAR(60) NOT NULL
 );
 INSERT INTO rooms (name,floor) VALUES
 ('Laboratory 1','Upper'),('Laboratory 2','Upper'),('Laboratory 3','Upper'),('Laboratory 4','Upper'),
@@ -35,4 +45,4 @@ INSERT INTO bookings (room_id,booking_date,start_time,end_time,class_name,lendee
 (8,'2026-11-18','10:00','12:00','BSCS 1-A','Grace Aquino','2025-0064','Admin Lim'),
 (1,'2026-11-18','13:00','15:00','BSCS 2-B','Jenny Castillo','2024-0230','Admin Santos'),
 (1,'2026-11-19','09:00','12:00','BSIT 3-B','Miguel Torres','2023-0164','Admin Lim'),
-(1,'2026-11-20','14:00','18:00','BSCS 4-A','Ana Mendoza','2022-0451','Admin Santos');
+(1,'2026-11-20','14:00','17:00','BSCS 4-A','Ana Mendoza','2022-0451','Admin Santos');

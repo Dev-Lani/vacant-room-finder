@@ -10,7 +10,16 @@ function now_dt(){
 }
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES); }
 function t12($t){ return date('g:i A', strtotime($t)); }
+function ic($d,$s=18){ return '<svg width="'.$s.'" height="'.$s.'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'.$d.'"/></svg>'; }
 function pct($t){ [$H,$M] = explode(':',$t); return max(0,min(100,(($H+$M/60)-DAY_START)/(DAY_END-DAY_START)*100)); }
+// Edit this to change the class options. Years 3-4 use specializations instead of sections A-C.
+function class_map(){
+  $spec = ['BSIT' => ['WMAD','SMP','AMG'], 'BSCS' => ['IS']];
+  $m = [];
+  foreach ($spec as $p => $sp)
+    foreach ([1,2,3,4] as $y) $m[$p][$y] = $y >= 3 ? $sp : ['A','B','C'];
+  return $m;
+}
 
 /* ---------- auth, CSRF, flash ---------- */
 function me(){ return $_SESSION['admin'] ?? null; }
@@ -23,10 +32,17 @@ function csrf_check(){
   }
 }
 function flash($msg, $bad = false){ $_SESSION['flash'] = [$msg, $bad]; }
+// Floating notification (top-right). Auto-dismisses; app.js wires up close + timer.
+function toast_html($m, $bad = false){
+  $d = $bad ? 'M12 7v6M12 16.5v.01' : 'M7.5 12.5l3 3 6-6.5';
+  return '<div class="toast '.($bad ? 'bad' : 'ok').'" role="'.($bad ? 'alert' : 'status').'">'
+    .'<span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5" pathLength="1"/><path d="'.$d.'" pathLength="1"/></svg></span>'
+    .'<p>'.h($m).'</p><button type="button" class="tx" aria-label="Dismiss">&times;</button><i class="tbar"></i></div>';
+}
 function show_flash(){
   if (empty($_SESSION['flash'])) return;
   [$m,$b] = $_SESSION['flash']; unset($_SESSION['flash']);
-  echo '<p class="flash '.($b?'bad':'').'">'.h($m).'</p>';
+  echo '<div class="toasts">'.toast_html($m, $b).'</div>';
 }
 // Where to return after a POST (whitelisted pages only)
 function back_value(){
@@ -85,12 +101,17 @@ function room_state($bks, $now){
 function page_head($title, $sub, $active){
   global $pdo; $now = now_dt();
   $count = $pdo->query("SELECT COUNT(*) FROM bookings WHERE status<>'cancelled'")->fetchColumn();
-  $nav = ['index'=>['Dashboard','▦'],'bookings'=>['Bookings','▣'],'timetable'=>['Timetable','◔'],'qr'=>['QR Codes','▤']];
+  $nav = [
+    'index'=>['Dashboard','M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'],
+    'bookings'=>['Bookings','M8 3h8a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1zM8 11h8M8 15h5'],
+    'timetable'=>['Timetable','M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2'],
+    'qr'=>['QR Codes','M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM14 20h3M20 17v4'],
+    'admins'=>['Admins','M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM21 20v-1a4 4 0 0 0-3-3.9M16 4.1a3.5 3.5 0 0 1 0 6.8']];
   $name = me()['name'] ?? ''; $ini = '';
   foreach (array_slice(preg_split('/\s+/', trim($name)), 0, 2) as $w) $ini .= strtoupper(mb_substr($w,0,1));
-  echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.h($title).' · RoomFinder</title><link rel="stylesheet" href="style.css"></head><body><aside class="side"><div class="brand"><span class="logo">▦</span><div><b>RoomFinder</b><small>CSS Department</small></div></div><p class="menu">MENU</p><nav>';
-  foreach($nav as $k=>[$l,$i]) echo '<a href="'.$k.'.php" class="'.($k===$active?'on':'').'"><span>'.$i.'</span>'.$l.($k==='bookings'?'<em class="badge">'.$count.'</em>':'').'</a>';
-  echo '<a class="dim"><span>▥</span>Reports<em class="soon">Soon</em></a><a class="dim"><span>⚙</span>Settings<em class="soon">Soon</em></a></nav>
+  echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.h($title).' · RoomFinder</title><link rel="stylesheet" href="style.css"></head><body><aside class="side"><div class="brand"><span class="logo">'.ic('M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',20).'</span><div><b>RoomFinder</b><small>CSS Department</small></div></div><p class="menu">MENU</p><nav>';
+  foreach($nav as $k=>[$l,$i]) echo '<a href="'.$k.'.php" class="'.($k===$active?'on':'').'">'.$l.($k==='bookings'?'<em class="badge">'.$count.'</em>':'').'</a>';
+  echo '</nav>
   <div class="key"><p class="menu">STATUS KEY</p><p><i class="dot g"></i>Available now</p><p><i class="dot s"></i>Booked, awaiting check-in</p><p><i class="dot r"></i>In use (checked in)</p></div>
   <form method="post" action="logout.php" class="lo">'.csrf_field().'<button>Log out</button></form></aside>
   <main><header class="top"><div><h1>'.h($title).'</h1><p class="sub">'.h($sub).'</p></div><div class="chips"><span class="chip">'.$now->format('D, M j  ·  g:i A').'</span><span class="chip"><b class="av">'.h($ini).'</b> '.h($name).'</span></div></header>';
@@ -103,14 +124,21 @@ function page_foot($scripts = ''){
 function booking_modal($rooms){
   $o = ''; foreach($rooms as $r) $o .= '<option value="'.$r['id'].'">'.h($r['name']).'</option>';
   $today = now_dt()->format('Y-m-d');
-  echo '<dialog id="bm"><form method="post" action="book.php">'.form_extras().'<input type="hidden" name="id" id="bm-id">
+  $cm = class_map();
+  $po = ''; foreach (array_keys($cm) as $p) $po .= '<option>'.h($p).'</option>';
+  echo '<dialog id="bm" data-classes="'.h(json_encode($cm)).'"><form method="post" action="book.php">'.form_extras().'<input type="hidden" name="id" id="bm-id">
   <h2><span id="bm-h">Book</span> <span id="bm-title">a room</span></h2>
   <label>Room<select name="room_id" id="bm-room">'.$o.'</select></label>
   <label>Date<input type="date" name="booking_date" id="bm-date" min="'.$today.'" value="'.$today.'" required></label>
   <div class="two"><label>Start<input type="time" name="start_time" min="08:00" max="17:00" value="08:00" required></label><label>End<input type="time" name="end_time" min="08:00" max="17:00" value="09:00" required></label></div>
   <small>Max '.MAX_BOOKING_HOURS.' hours per booking. If nobody checks in within '.NOSHOW_GRACE_MIN.' min after the start time, the room is released.</small>
-  <label>Class<input name="class_name" maxlength="60" placeholder="BSIT 1-A" required></label>
-  <div class="two"><label>Lendee (student)<input name="lendee_name" maxlength="80" required></label><label>Student ID<input name="lendee_id" maxlength="20" placeholder="2025-0001" required></label></div>
+  <div class="three">
+    <label>Program<select name="program" id="bm-prog" required>'.$po.'</select></label>
+    <label>Year<select name="year_level" id="bm-year" required><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option></select></label>
+    <label><span id="bm-seclbl">Section</span><select name="section" id="bm-sec" required></select></label>
+  </div>
+  <div class="two"><label>Lendee (student)<input name="lendee_name" maxlength="80" required></label>
+  <label>Student ID<input name="lendee_id" id="bm-lid" maxlength="9" inputmode="numeric" pattern="\d{4}-\d{4}" placeholder="0424-0000" title="Format: 0000-0000" required></label></div>
   <div class="acts"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn">Save booking</button></div></form></dialog>';
 }
 function checkout_modal(){

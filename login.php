@@ -17,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login · RoomFinder</title><link rel="stylesheet" href="style.css"></head>
 <body class="pub"><div class="pubc login">
 <div class="brand"><span class="logo">▦</span><div><b>RoomFinder</b><small>CSS Department · Admin login</small></div></div>
-<?php if ($err) echo '<p class="flash bad">'.h($err).'</p>'; ?>
+<?php if ($err) echo '<div class="toasts">'.toast_html($err, true).'</div>'; ?>
 <form method="post" class="lf"><?= csrf_field() ?>
 <label>Username<input name="username" autocomplete="username" required autofocus></label>
 <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
-<button class="btn">Log in</button></form></div></body></html>
+<button class="btn">Log in</button></form></div><script src="app.js"></script></body></html>
